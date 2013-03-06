@@ -56,7 +56,7 @@ class BddController {
     view.mainPanel.repaint()
   }
 
-  def findReorderedIndex = { index, order ->
+  int findReorderedIndex(index, order) {
     def nLevels = order.size()
     String str = Integer.toString (index, 2).padLeft(nLevels, '0')
     def orderIndices = order.collect { Integer.parseInt (it[1]) }
@@ -66,10 +66,10 @@ class BddController {
       finalStr[orderIndices[i] - 1] = str[i]
     }
     println "Final string: $finalStr"
-    def binary = Integer.parseInt(finalStr as String, 2)
+    int binary = Integer.parseInt(finalStr as String, 2)
     println "returning value: $binary"
     // TODO proveri tip ovog binary
-    binary.inspect()
+    binary.dump()
     return binary
     //return Integer.parseInt(finalStr as String, 2)
   }
@@ -91,7 +91,7 @@ class BddController {
       println "debugging..."
       println it
       println order
-      int index = findReorderedIndex(it, order)
+      Integer index = findReorderedIndex(it, order)
       println "Stampanje indeksa: " + index
       println "functionModel: " + functionModel[index]
       vertices << new MutableVertex(functionModel[index].f ? "1" : "0", MutableVertex.TERMINAL)
@@ -185,6 +185,8 @@ class BddController {
   }
 
   def reduceSubtrees = { graph ->
+    println "reduceSubtrees"
+    println graph.dump()
     def reducedVertices = new ArrayList(graph.vertices)
     def reducedEdges = []
     def edges = new ArrayList(graph.edges)
@@ -204,6 +206,13 @@ class BddController {
         sameLevelVertices.each { v -> outEdges.addAll(graph.getOutEdges(v)) }
         def subtreeVertices = outEdges.collect { e -> graph.getDest(e)}
         def values = subtreeVertices.collect { v -> getSubtreeValues(v, graph) }
+
+        println "Same level vertces: "
+        println sameLevelVertices.dump()
+        println "Subtree vertices: "
+        println subtreeVertices.dump()
+        println "Values: "
+        println values.dump()
 
         // sequence, list of subtrees
         def sameValues = [:]
@@ -231,8 +240,8 @@ class BddController {
               parsedVertices.addAll(subtree.getVertices())
               edges -= subtree.getEdges()
 
-              println "****REMOVED VERTICES: " + subtree.getVertices()
-              println "****REMOVED EDGES: " + subtree.getEdges()
+              println "****REMOVED VERTICES: " + subtree.getVertices().dump()
+              println "****REMOVED EDGES: " + subtree.getEdges().dump()
 
 
               //addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.expelled(subtree))
@@ -245,11 +254,10 @@ class BddController {
               //							addStep(reducedVertices, edges, reducedEdges, graph,
               //								GraphChange.redirected(edgeToRedirect, v, subtreeRoot) )
 
-              addStep(reducedVertices, edges, reducedEdges, graph,
-              GraphChange.all(subtree.vertices, subtree.edges, edgeToRedirect, v, subtreeRoot))
+              addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.all(subtree.vertices, subtree.edges, edgeToRedirect, v, subtreeRoot))
 
               //println "RV:" + reducedVertices
-              println " REDUCED EDGES:" + reducedEdges
+              println " REDUCED EDGES:" + reducedEdges.dump()
               //println " EDGES:" + reducedEdges
             }
           }
@@ -257,12 +265,16 @@ class BddController {
       }
       i++;
     }
+    println "YYY"
+    println edges.dump()
     reducedEdges.addAll(edges.collect { [edge: it, source: graph.getSource(it), dest: graph.getDest(it)] })
     return reducedEdges
   }
 
   def reduceParallelEdges = { edges ->
     def graph = createHelperGraph(edges)
+    println "XXX"
+    println edges.dump()
 
     while(hasParallelsToReduce(graph)) {
       graph = reduceSingleParallelEdge(graph)
@@ -393,6 +405,8 @@ class BddController {
 
   def getSubtreeValues(vertex, graph) {
     def terminalSuccessors = findTerminalSuccessors(vertex, graph)
+    println "Terminal Successors $terminalSuccessors"
+    println terminalSuccessors.dump()
     def terminalString = ""
     terminalSuccessors.each { v -> terminalString += v.name }
     return terminalString
@@ -404,9 +418,11 @@ class BddController {
     }
 
     def terminalVertices = graph.getVertices().findAll { v -> v.isTerminal() }
+    println "Terminal vertices"
+    println terminalVertices.dump()
 
-    return terminalVertices.findAll { tv ->
-      //			println "Finding succesors: " + tv.dump()
+    def terminalSuccessors = terminalVertices.findAll { tv ->
+      println "Finding succesors: " + tv.dump()
       boolean isSuccessor = false
       def parentVertex = graph.getPredecessors(tv).iterator().next()
 
@@ -423,8 +439,14 @@ class BddController {
         }
       }
 
+      println isSuccessor
+
       return isSuccessor
     }
+
+    println "Terminal successors: "
+    println terminalSuccessors.dump()
+    return terminalSuccessors
   }
 
   def animateForwardStep = {
