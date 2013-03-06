@@ -10,16 +10,16 @@ class FunctionDialogController {
   def view
 
   void mvcGroupInit(Map args) {
-    println "Inicijalizacija"
+    println "Function dialog initialization"
     model.nVariablesList.addAll(1..4)
   }
 
   def onOk = {
     view.functionDialog.visible = false
-    def nLevels = model.selected
-    println "Broj nivoa: $nLevels"
-    app.views.bdd.pnlReorder.changeNVarsTo(nLevels)
-    app.controllers.bdd.redraw(model.tableModel, nLevels)
+    def nVars = model.nVars
+    println "Levels: $nVars"
+    app.views.bdd.pnlReorder.changeNVarsTo(nVars)
+    app.controllers.bdd.redraw(model.tableModel, nVars)
   }
 
 }

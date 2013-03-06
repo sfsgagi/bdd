@@ -11,7 +11,7 @@ class FunctionDialogModel {
   def tableSortingModel
   def tableModel
   final EventList nVariablesList = new BasicEventList()
-  @Bindable Integer selected = 1
+  @Bindable Integer nVars = 1
 
   def createTableModel() {
     println "Creating table model..."
@@ -25,8 +25,6 @@ class FunctionDialogModel {
   }
 
   def createRows() {
-    int nVars = selected
-
     def rows = (0..(2**nVars - 1)).collect {
       String strRow = Integer.toString (it, 2).padLeft(nVars, '0')
       def row = [:]
@@ -42,8 +40,6 @@ class FunctionDialogModel {
   }
 
   def createColumns() {
-    int nVars = selected
-
     def columns = (1..nVars).collect {
       [name: 'x' + it, editable: { target, columns, index -> false }]
     }

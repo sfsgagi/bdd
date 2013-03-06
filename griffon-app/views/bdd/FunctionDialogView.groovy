@@ -22,7 +22,7 @@ dialog(owner: app.views.bdd, title: 'Enter function',
   migLayout()
   label('Select the number of variables:')
   comboBox(id: 'cmbNVariables', model: eventComboBoxModel(source: model.nVariablesList, selectedItem: 1),
-    actionPerformed: { model.updateTableModel()}, selectedItem: bind(target:model, targetProperty:'selected'),
+    actionPerformed: { model.updateTableModel()}, selectedItem: bind(target:model, targetProperty:'nVars'),
     constraints: "wrap")
   panel(id: 'pnlTable', constraints: 'growx, spanx, wrap', layout: new MigLayout("insets 0")) {
     scrollPane(constraints: "growx, spanx") {
