@@ -6,14 +6,14 @@ import java.awt.geom.QuadCurve2D;
 import java.awt.geom.Rectangle2D;
 
 public class QuadCurveExample extends JApplet {
- Canvas1 canvas;
-public static void main(String[] args){
-      JFrame frame = new JFrame("QuadCurve Example");
-      QuadCurveExample curve = new QuadCurveExample();
-      curve.init();
-      frame.getContentPane().add(curve);
-      frame.setSize(500,250);
-      frame.setVisible(true);
+  Canvas1 canvas;
+  public static void main(String[] args){
+    JFrame frame = new JFrame("QuadCurve Example");
+    QuadCurveExample curve = new QuadCurveExample();
+    curve.init();
+    frame.getContentPane().add(curve);
+    frame.setSize(500,250);
+    frame.setVisible(true);
   }
   public void init() {
     Container container = getContentPane();
@@ -31,16 +31,16 @@ public static void main(String[] args){
 
       vector = new Vector();
       vector.addElement(new QuadCurve2D.Float(30, 30, 90, 
-         170, 130,30));
+            170, 130,30));
       vector.addElement(new QuadCurve2D.Float(130, 110, 170, 
-         50, 210,190));
-      
+            50, 210,190));
+
     }
-     public void paint(Graphics g) {
+    public void paint(Graphics g) {
       Graphics2D g2 = (Graphics2D) g;
-     for (int k = 0; k < vector.size(); k++) {
+      for (int k = 0; k < vector.size(); k++) {
         g2.draw((QuadCurve2D) vector.elementAt(k));
       }
-}
+    }
   }
 }
