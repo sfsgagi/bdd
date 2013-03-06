@@ -65,13 +65,7 @@ class BddController {
     (0..nLevels - 1).each { int i ->
       finalStr[orderIndices[i] - 1] = str[i]
     }
-    println "Final string: $finalStr"
-    int binary = Integer.parseInt(finalStr as String, 2)
-    println "returning value: $binary"
-    // TODO proveri tip ovog binary
-    binary.dump()
-    return binary
-    //return Integer.parseInt(finalStr as String, 2)
+    return Integer.parseInt(finalStr as String, 2)
   }
 
   def redraw(functionModel, nLevels) {
@@ -118,7 +112,7 @@ class BddController {
   }
 
   def redrawReordered() {
-    redraw(app.models.FunctionDialog.tableModel, view.pnlReorder.order.size())
+    redraw(app.models.FunctionDialog.tableSortingModel, view.pnlReorder.order.size())
   }
 
   def redrawGraph(graphData) {
@@ -181,12 +175,9 @@ class BddController {
     model.nSteps = model.steps.size()
     model.currentStep = model.nSteps - 2
     updateStatus()
-    return [vertices, reducedEdges]
   }
 
-  def reduceSubtrees = { graph ->
-    println "reduceSubtrees"
-    println graph.dump()
+  List reduceSubtrees(graph) {
     def reducedVertices = new ArrayList(graph.vertices)
     def reducedEdges = []
     def edges = new ArrayList(graph.edges)
@@ -206,13 +197,6 @@ class BddController {
         sameLevelVertices.each { v -> outEdges.addAll(graph.getOutEdges(v)) }
         def subtreeVertices = outEdges.collect { e -> graph.getDest(e)}
         def values = subtreeVertices.collect { v -> getSubtreeValues(v, graph) }
-
-        println "Same level vertces: "
-        println sameLevelVertices.dump()
-        println "Subtree vertices: "
-        println subtreeVertices.dump()
-        println "Values: "
-        println values.dump()
 
         // sequence, list of subtrees
         def sameValues = [:]
@@ -240,8 +224,8 @@ class BddController {
               parsedVertices.addAll(subtree.getVertices())
               edges -= subtree.getEdges()
 
-              println "****REMOVED VERTICES: " + subtree.getVertices().dump()
-              println "****REMOVED EDGES: " + subtree.getEdges().dump()
+              //println "****REMOVED VERTICES: " + subtree.getVertices().dump()
+              //println "****REMOVED EDGES: " + subtree.getEdges().dump()
 
 
               //addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.expelled(subtree))
@@ -256,25 +240,20 @@ class BddController {
 
               addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.all(subtree.vertices, subtree.edges, edgeToRedirect, v, subtreeRoot))
 
-              //println "RV:" + reducedVertices
+              //println "Reduced Vertices:" + reducedVertices
               println " REDUCED EDGES:" + reducedEdges.dump()
-              //println " EDGES:" + reducedEdges
             }
           }
         }
       }
       i++;
     }
-    println "YYY"
-    println edges.dump()
     reducedEdges.addAll(edges.collect { [edge: it, source: graph.getSource(it), dest: graph.getDest(it)] })
     return reducedEdges
   }
 
-  def reduceParallelEdges = { edges ->
+  List reduceParallelEdges(edges) {
     def graph = createHelperGraph(edges)
-    println "XXX"
-    println edges.dump()
 
     while(hasParallelsToReduce(graph)) {
       graph = reduceSingleParallelEdge(graph)
@@ -286,7 +265,7 @@ class BddController {
     return reducedEdges
   }
 
-  def reduceSingleParallelEdge = { graph ->
+  Graph reduceSingleParallelEdge(graph) {
     def reducedVertices = new ArrayList(graph.vertices)
     def reducedEdges = []
     def edges = new ArrayList(graph.edges)
@@ -304,8 +283,6 @@ class BddController {
         return false
       }
     }
-
-
 
     if(!vertex.isTerminal()) {
       def outEdges = graph.getOutEdges(vertex)
@@ -344,7 +321,7 @@ class BddController {
     return createHelperGraph(reducedEdges)
   }
 
-  def reduceExtraTerminals = { data ->
+  List reduceExtraTerminals(data) {
     def reducedData = new ArrayList(data)
     def terminalVerticesData = data.findAll { d ->
       d.dest.isTerminal()
@@ -367,22 +344,21 @@ class BddController {
     return reducedData
   }
 
-  def createHelperGraph = { edges ->
+  Graph createHelperGraph(edges) {
     Graph<MutableVertex, String> graph = new DirectedOrderedSparseMultigraph<MutableVertex, String>();
     edges.each {
       graph.addEdge(it.edge, it.source, it.dest)
     }
-
-    return graph
+    graph
   }
 
-  def createHelperLayout = { graph ->
+  Layout createHelperLayout(graph) {
     Layout<MutableVertex, String> layout = null;
     int nLevels = app.controllers.FunctionDialog.view.cmbNVariables.selectedItem
-    return  new BddTreeLayout<MutableVertex, String>(nLevels, graph, 50, 100);
+    return new BddTreeLayout<MutableVertex, String>(nLevels, graph, 50, 100);
   }
 
-  def hasParallelsToReduce = { graph ->
+  boolean hasParallelsToReduce(graph) {
 
     return graph.vertices.any { vertex ->
       if(!vertex.isTerminal()) {
@@ -404,24 +380,19 @@ class BddController {
   }
 
   def getSubtreeValues(vertex, graph) {
-    def terminalSuccessors = findTerminalSuccessors(vertex, graph)
-    println "Terminal Successors $terminalSuccessors"
-    println terminalSuccessors.dump()
+    List terminalS = findTerminalSuccessors(vertex, graph)
     def terminalString = ""
-    terminalSuccessors.each { v -> terminalString += v.name }
+    terminalS.each { v -> terminalString += v.name }
     return terminalString
   }
 
-  def findTerminalSuccessors(vertex, graph) {
+  List findTerminalSuccessors(vertex, graph) {
     if(vertex.isTerminal()) {
       return [vertex]
     }
-
     def terminalVertices = graph.getVertices().findAll { v -> v.isTerminal() }
-    println "Terminal vertices"
-    println terminalVertices.dump()
 
-    def terminalSuccessors = terminalVertices.findAll { tv ->
+    List terminalSuccessors = terminalVertices.findAll { tv ->
       println "Finding succesors: " + tv.dump()
       boolean isSuccessor = false
       def parentVertex = graph.getPredecessors(tv).iterator().next()
@@ -444,12 +415,10 @@ class BddController {
       return isSuccessor
     }
 
-    println "Terminal successors: "
-    println terminalSuccessors.dump()
     return terminalSuccessors
   }
 
-  def animateForwardStep = {
+  def animateForwardStep() {
     model.with {
       def currentEdges = new ArrayList(steps[currentStep].edges)
       def newEdges = new ArrayList(steps[currentStep + 1].edges)
@@ -569,6 +538,4 @@ class BddController {
       view.txaStatus.text = status
     }
   }
-
-
 }
