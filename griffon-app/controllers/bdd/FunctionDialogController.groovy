@@ -19,7 +19,7 @@ class FunctionDialogController {
     def nVars = model.nVars
     println "Levels: $nVars"
     app.views.bdd.pnlReorder.changeNVarsTo(nVars)
-    app.controllers.bdd.redraw(model.tableModel, nVars)
+    app.controllers.bdd.redraw(model.tableSortingModel, nVars)
   }
 
 }
