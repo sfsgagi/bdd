@@ -65,6 +65,9 @@ imageIcon('/griffon-icon-16x16.png').image
   borderLayout()
   panel(constraints: NORTH) {
     migLayout()
+// temp button
+    button("Test", actionPerformed: {controller.onTest()}, constraints: "gapright 20px")
+
     button(openFunctionDialogAction, constraints: "gapright 20px")
     button(reduceGraphAction, enabled: bind {model.functionDefined && model.graphDrawn})
     button("Redraw", actionPerformed: { controller.redrawReordered()}, 

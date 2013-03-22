@@ -40,13 +40,6 @@ class BddController {
     model.currentStep = -1
   }
 
-  // void mvcGroupDestroy() {
-  //    // this method is called when the group is destroyed
-  // }
-
-  // TODO treba odraditi obelezavanje ivica
-  // TODO prebaciti na laptop i instalacija
-
   def openFunctionDialog = {
     app.views.FunctionDialog.functionDialog.visible = true
   }
@@ -68,7 +61,7 @@ class BddController {
     return Integer.parseInt(finalStr as String, 2)
   }
 
-  def redraw(functionModel, nLevels) {
+  def redraw(nLevels, closGetValueAt) {
     model.functionDefined = true
     model.currentStep = -1
     def order = view.pnlReorder.order
@@ -87,8 +80,7 @@ class BddController {
       println order
       Integer index = findReorderedIndex(it, order)
       println "Stampanje indeksa: " + index
-      println "functionModel: " + functionModel[index]
-      vertices << new MutableVertex(functionModel[index].f ? "1" : "0", MutableVertex.TERMINAL)
+      vertices << new MutableVertex(closGetValueAt(index), MutableVertex.TERMINAL)
     }
 
     //println vertices.dump()
@@ -108,11 +100,16 @@ class BddController {
   def variablesReordered() {
     model.currentStep = -1
     model.graphDrawn = false
-    //		redraw(app.models.FunctionDialog.tableModel, view.pnlReorder.order.size())
+    // redraw(app.models.FunctionDialog.tableModel, view.pnlReorder.order.size())
   }
 
   def redrawReordered() {
-    redraw(app.models.FunctionDialog.tableSortingModel, view.pnlReorder.order.size())
+    def closGetValueAt = { index ->
+      def functionModel = app.models.FunctionDialog.tableSortingModel
+      functionModel[index].f ? "1" : "0"
+    }
+
+    redraw(view.pnlReorder.order.size(), closGetValueAt)
   }
 
   def redrawGraph(graphData) {
@@ -537,5 +534,19 @@ class BddController {
       (0..currentStep).each {  status += steps[it + 1].graphChange }
       view.txaStatus.text = status
     }
+  }
+
+  def onTest() {
+    //println("Test clicked")
+    def edges = model.steps[currentStep].edges
+
+
+    println edges.dump()
+    /*
+    edges.each { edge ->
+      edge.
+    }*/
+
+
   }
 }
