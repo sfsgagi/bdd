@@ -1,13 +1,11 @@
 package graph
-
-import bdd.BddModel 
 import java.awt.Color 
-
 
 public class MutableVertex implements Comparable<MutableVertex> {
 	public final static String NODE = "NODE";
 	public final static String ROOT = "ROOT";
 	public final static String TERMINAL = "TERMINAL";
+	public final static String CP = "CP";
 	static counter = 1;
 	Integer vertexId
 	String name = ""
@@ -23,6 +21,10 @@ public class MutableVertex implements Comparable<MutableVertex> {
 		this(n)
 		this.type = type
 	}
+
+  public int intValue() {
+    return isTerminal() ? Integer.parseInt(name) : 0
+  }
 	
 	public String toString() {
 		return "id: $vertexId [$name]"
@@ -35,6 +37,14 @@ public class MutableVertex implements Comparable<MutableVertex> {
 	boolean isRoot() {
 		return type == ROOT
 	}
+
+  boolean isCrosspoint() {
+    return type == CP
+  }
+
+  boolean isNode() {
+    return type == NODE
+  }
 	
 	Color findColor() {
 		if(color != null) {

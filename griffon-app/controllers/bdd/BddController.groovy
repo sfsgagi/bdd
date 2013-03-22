@@ -17,6 +17,7 @@ import graph.GraphChange;
 import graph.GraphPanel
 import graph.MutableVertex
 import graph.WeightedEdge
+import graph.DyadicAutocorrelation
 import java.awt.BorderLayout
 import java.awt.Color;
 import java.awt.Point;
@@ -537,16 +538,10 @@ class BddController {
   }
 
   def onTest() {
-    //println("Test clicked")
-    def edges = model.steps[currentStep].edges
+    println "Test integration with Dyadic autocorrelation class" 
 
-
-    println edges.dump()
-    /*
-    edges.each { edge ->
-      edge.
-    }*/
-
-
+    def da = new DyadicAutocorrelation()
+    da.testDyadic()
+    da.testSpectra()
   }
 }
