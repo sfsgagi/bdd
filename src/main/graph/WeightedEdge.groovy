@@ -18,8 +18,7 @@ class WeightedEdge {
   String toString() {
     if(weight > 1) {
       return ""
-    }
-    else {
+    } else {
       return "$weight"
     }
   }

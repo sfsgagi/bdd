@@ -121,6 +121,7 @@ class BddController {
       g.addEdge(it.edge, it.source, it.dest)
     }
 
+    println "Current step: " + model.currentStep
     DyadicAutocorrelation.printGraph(g)
 
     Layout<MutableVertex, String> layout = null;
@@ -175,75 +176,90 @@ class BddController {
     addStep(vertices, edges, reducedEdges, model.graph, GraphChange.finished())
     model.nSteps = model.steps.size()
     model.currentStep = model.nSteps - 1
+    printSteps()
     updateStatus()
   }
 
   List reduceSubtrees(graph) {
+    println "Reducing subtrees..."
     def reducedVertices = new ArrayList(graph.vertices)
     def reducedEdges = []
     def edges = new ArrayList(graph.edges)
     addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.empty())
 
+
+    def order = view.pnlReorder.order
+    int nLevels = order.size()
+
     int i = 0
     def parsedVertices = []
-    while(i < reducedVertices.size()) {
-      def vertex = reducedVertices[i]
-      if(!vertex.isTerminal() && !vertex.isRoot() && !parsedVertices.contains(vertex)) {
-        def sameLevelVertices = reducedVertices.findAll { v ->
-          v.name == vertex.name && !parsedVertices.contains(v)
-        }
-        parsedVertices.addAll(sameLevelVertices)
+    while(i < nLevels) {
+      def vertexName = order[i]
+      println "Parsing vertex: $vertexName"
+      def sameLevelVertices = reducedVertices.findAll { v ->
+        v.name == vertexName && !parsedVertices.contains(v)
+      }
+      parsedVertices.addAll(sameLevelVertices)
 
-        def outEdges = []
-        sameLevelVertices.each { v -> outEdges.addAll(graph.getOutEdges(v)) }
-        def subtreeVertices = outEdges.collect { e -> graph.getDest(e)}
-        def values = subtreeVertices.collect { v -> getSubtreeValues(v, graph) }
+      def outEdges = []
+      sameLevelVertices.each { v -> outEdges.addAll(graph.getOutEdges(v)) }
+      def subtreeVertices = outEdges.collect { e -> graph.getDest(e)}
+      def values = subtreeVertices.collect { v -> getSubtreeValues(v, graph) }
+      println "Subtree values for current vertice: " 
+      println values.dump()
 
-        // sequence, list of subtrees
-        def sameValues = [:]
+      // sequence, list of subtrees
+      def sameValues = [:]
 
-        // init with lists
-        values.each { val ->
-          sameValues[val] = []
-        }
+      // init with lists
+      values.each { val ->
+        sameValues[val] = []
+      }
 
-        values.eachWithIndex{ val, ind ->
-          sameValues[val] << subtreeVertices[ind]
-        }
-        println "SUBTREE MAP:" + sameValues
-        sameValues.each { k, val ->
-          if(val.size() > 1) {
-            // subtree to redirect to
-            def subtreeRoot = val[0]
+      values.eachWithIndex{ val, ind ->
+        sameValues[val] << subtreeVertices[ind]
+      }
+      println "SUBTREE MAP:" + sameValues
+      sameValues.each { k, val ->
+        println "Parsing key: ${k}"
+        if(val.size() > 1) {
+          // subtree to redirect to
+          def subtreeRoot = val[0]
+          println "Subtree root: ${subtreeRoot.dump()}"
 
-            (1..val.size() - 1).each {
-              def v = val[it]
-              // remove subtree
-              def subtree = BddHelper.getSubTree(graph, v)
+          (1..val.size() - 1).each {
+            def v = val[it]
+            // remove subtree
+            def subtree = BddHelper.getSubTree(graph, v)
+            println "Removing subtree:" 
+            println subtree.dump()
 
-              reducedVertices -= subtree.getVertices()
-              parsedVertices.addAll(subtree.getVertices())
-              edges -= subtree.getEdges()
+            reducedVertices -= subtree.getVertices()
+            parsedVertices.addAll(subtree.getVertices())
+            edges -= subtree.getEdges()
 
-              //println "****REMOVED VERTICES: " + subtree.getVertices().dump()
-              //println "****REMOVED EDGES: " + subtree.getEdges().dump()
-
-
-              //addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.expelled(subtree))
-
-              // redirect to other subtree
-              def edgeToRedirect = graph.getInEdges(v).iterator().next()
-              edges -= edgeToRedirect
-              reducedEdges << [edge: edgeToRedirect, source: graph.getSource(edgeToRedirect), dest: subtreeRoot]
-
-              //							addStep(reducedVertices, edges, reducedEdges, graph,
-              //								GraphChange.redirected(edgeToRedirect, v, subtreeRoot) )
-
-              addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.all(subtree.vertices, subtree.edges, edgeToRedirect, v, subtreeRoot))
-
-              //println "Reduced Vertices:" + reducedVertices
-              println " REDUCED EDGES:" + reducedEdges.dump()
+            println "****REMOVED VERTICES: " + subtree.getVertices().dump()
+            println "****REMOVED EDGES: "
+            subtree.getEdges().each { e -> 
+              println("" + subtree.getSource(e).dump() + "---$e--->" + subtree.getDest(e).dump())
             }
+
+
+            //addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.expelled(subtree))
+
+            // redirect to other subtree
+            def edgeToRedirect = graph.getInEdges(v).iterator().next()
+            edges -= edgeToRedirect
+            reducedEdges << [edge: edgeToRedirect, source: graph.getSource(edgeToRedirect), dest: subtreeRoot]
+            println "Edge for redirection: ${edgeToRedirect.dump()}"
+
+            //							addStep(reducedVertices, edges, reducedEdges, graph,
+            //								GraphChange.redirected(edgeToRedirect, v, subtreeRoot) )
+
+            addStep(reducedVertices, edges, reducedEdges, graph, GraphChange.all(subtree.vertices, subtree.edges, edgeToRedirect, v, subtreeRoot))
+
+            //println "Reduced Vertices:" + reducedVertices
+            println " REDUCED EDGES:" + reducedEdges.dump()
           }
         }
       }
@@ -254,6 +270,7 @@ class BddController {
   }
 
   List reduceParallelEdges(edges) {
+    println "Reducing parallel edges..."
     def graph = createHelperGraph(edges)
 
     while(hasParallelsToReduce(graph)) {
@@ -322,6 +339,7 @@ class BddController {
   }
 
   List reduceExtraTerminals(data) {
+    println "Reducing extra terminals..."
     def reducedData = new ArrayList(data)
     def terminalVerticesData = data.findAll { d ->
       d.dest.isTerminal()
@@ -376,6 +394,7 @@ class BddController {
     def copiedVertices = new ArrayList(vertices)
     def copiedEdgeObjects = new ArrayList(edgeObjects)
     copiedEdgeObjects += edges.collect { [edge: it, source: graph.getSource(it), dest: graph.getDest(it)] }
+    println "Added step: ${model.steps.size()}"
     model.steps << [vertices: copiedVertices, edges: copiedEdgeObjects, graphChange: graphChange]
   }
 
@@ -393,7 +412,6 @@ class BddController {
     def terminalVertices = graph.getVertices().findAll { v -> v.isTerminal() }
 
     List terminalSuccessors = terminalVertices.findAll { tv ->
-      println "Finding succesors: " + tv.dump()
       boolean isSuccessor = false
       def parentVertex = graph.getPredecessors(tv).iterator().next()
 
@@ -409,8 +427,6 @@ class BddController {
           parentVertex = "Mrk"
         }
       }
-
-      println isSuccessor
 
       return isSuccessor
     }
@@ -539,17 +555,21 @@ class BddController {
     }
   }
 
+  def printSteps() {
+    println "Trace steps:"
+    model.steps.eachWithIndex { s, i ->
+      println i
+      println s.edges.dump()
+    }
+    println "End of steps printing."
+  }
+
   def onTest() {
     println "Test integration with Dyadic autocorrelation class" 
 
     def da = new DyadicAutocorrelation()
     //da.testDyadic()
     //da.testSpectra()
-    println "Koraci:"
-    model.steps.eachWithIndex { s, i ->
-      println i
-      println s.edges.dump()
-    }
     int nLevels = view.pnlReorder.order.size()
 
     println "Current step: ${model.currentStep}"
