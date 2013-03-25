@@ -1,3 +1,5 @@
+package graph
+
 class WeightedEdge {
   static int counter = 1
   int weight

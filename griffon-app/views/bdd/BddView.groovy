@@ -15,7 +15,7 @@ actions {
   name: 'Reduce Graph',
   mnemonic: 'R',
   accelerator: shortcut('R'),
-  closure: controller.reduceGraph)
+  closure: controller.onReduceGraph)
   action(
     id: 'nextStepAction',
     name: '>',
@@ -74,8 +74,8 @@ imageIcon('/griffon-icon-16x16.png').image
     enabled: bind {model.functionDefined}, constraints: "gapright 20px")
     button (firstStepAction, id: 'btnFirst', enabled: bind {model.currentStep > 0} )
     button (previousStepAction, id: 'btnPrevious', enabled: bind {model.currentStep > 0} )
-    button (nextStepAction, id: 'btnNext', enabled: bind {model.currentStep != -1 && model.currentStep < model.nSteps - 2})
-    button (lastStepAction, id: 'btnLast', enabled: bind {model.currentStep != -1 && model.currentStep < model.nSteps - 2})
+    button (nextStepAction, id: 'btnNext', enabled: bind {model.currentStep != -1 && model.currentStep < model.nSteps - 1})
+    button (lastStepAction, id: 'btnLast', enabled: bind {model.currentStep != -1 && model.currentStep < model.nSteps - 1})
     label ('Step: ')
     label (text: bind {if(model.currentStep == -1) return "" else return model.currentStep + 1}, constraints: 'wrap')
     panel(id: "pnlReorderContainer", constraints: "spanx") {

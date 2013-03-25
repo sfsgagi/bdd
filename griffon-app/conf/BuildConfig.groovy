@@ -189,6 +189,12 @@ log4j = {
     warn  'griffon'
 }
 
+jrebel {
+  location = '/home/ubuntu/jrebel/jrebel.jar'
+}
+
+//griffon.offline.mode=true
+
 
 app.fileType = '.groovy'
 

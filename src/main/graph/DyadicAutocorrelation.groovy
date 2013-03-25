@@ -60,18 +60,15 @@ class DyadicAutocorrelation {
 
 
   def fastWalshDyadicAutoCorrelation(f){
-    // ovo nece treba
+    // TODO
   }
 
   def testDyadic() {
-
+    // Example from: Analysis of Decision Diagram based Methods for the Calculation of the Dyadic Autocorrelation, Radmanovic et al.
     def f = [0, 0, 1, 0, 1, 1, 1, 1]
 
     //println dyadicAutoCorrelation(f)
     println W
-    /*println W.chronecker(W).chronecker(W)
-    println "krace"
-    println chronecker(W, 2)*/
     println dyadicAutoCorrelation(f)
     println "____________________________"
     println wkDyadicAutoCorrelation(f)
@@ -123,8 +120,8 @@ class DyadicAutocorrelation {
     return graph
   }
 
-  def printGraph = { Graph graph ->
-    println "Edges: "
+  def static printGraph(graph) {
+    println "Printing graph: "
     graph.edges.each { e ->
       println "" + graph.getSource(e).name + "---$e--->" + graph.getDest(e).name
     }
@@ -158,8 +155,8 @@ class DyadicAutocorrelation {
           if(!dest.name.equals(currentEndpoint)) {
             // insert crosspoint
             MutableVertex cp = new MutableVertex("\u00a9$currentEndpoint", MutableVertex.CP)
-            graph.addEdge(new StringEdge(e), source, cp)
-            graph.addEdge(new StringEdge("(-)"), cp, dest)
+            graph.addEdge(new WeightedEdge(e.weight), source, cp)
+            graph.addEdge(new WeightedEdge(2), cp, dest)
             graph.removeEdge(e)
             currentVertices << cp
           } else {
@@ -167,6 +164,9 @@ class DyadicAutocorrelation {
           }
         }
       }
+      println "Current graph"
+      printGraph(graph);
+      println "#############"
       currentLevel++
       println "Current vertices: " + currentVertices
     }
@@ -181,9 +181,11 @@ class DyadicAutocorrelation {
       graph.getInEdges(t).each { parents << graph.getSource(it) }
     }
     parents
+
   }
 
   def calculateSpectra(graph) {
+    printGraph(graph)
     def terminals = graph.vertices.findAll { v -> v.isTerminal() }
     def currentParents = getParents(graph, terminals)
     def mapVerticeToVector = [:]
@@ -198,8 +200,9 @@ class DyadicAutocorrelation {
         if(outEdges.size() == 1) {
           dest1 = dest2 = graph.getDest(outEdges.first())
         } else {
-          def e1 = outEdges.find { e -> e.text == "0" }
-          def e2 = outEdges.find { e -> e.text == "1" }
+          def e1 = outEdges.find { e -> e.weight == 0 }
+          def e2 = outEdges.find { e -> e.weight == 1 }
+
           dest1 = graph.getDest(e1)
           dest2 = graph.getDest(e2)
         }
@@ -240,25 +243,6 @@ class DyadicAutocorrelation {
     spectra
   }
 
-  def ddAutoCorrelation(reducedGraph) {
-    nLevels = 3
-
-    def spectra = calculateSpectra(reducedGraph)
-    spectra = spectra.collect { it * it }
-
-    // create graph
-    // TODO
-
-    // reduce
-    // TODO
-
-    // calculate spectra
-    // TODO
-
-    def autoCorrelation = spectra.collect { 1/2**nLevels * it }
-    autocorrelation
-
-  }
 
   def testSpectra() {
     def testGraph = createHelperGraph(graphData2)
