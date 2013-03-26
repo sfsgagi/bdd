@@ -32,6 +32,7 @@ class BddController {
   // these will be injected by Griffon
   def model
   def view
+  boolean addingEnabled = true
 
   GraphZoomScrollPane graphScroll
 
@@ -62,10 +63,9 @@ class BddController {
     return Integer.parseInt(finalStr as String, 2)
   }
 
-  def redraw(nLevels, closGetValueAt) {
-    model.functionDefined = true
-    model.currentStep = -1
+  HashSet createBddEdges(closGetValueAt) {
     def order = view.pnlReorder.order
+    def nLevels = order.size()
     println "ORDER KOJI KORISTIMO: $order"
     def vertices = []
     def fVertex = new MutableVertex("F", MutableVertex.ROOT)
@@ -94,16 +94,13 @@ class BddController {
       edges << [edge: new WeightedEdge(1), source: vertices[i], dest: vertices[startIndex + 1]]
     }
 
-    println "Edges to redraw: " 
-    println edges.dump()
-    println "Graph"
-    redrawGraph(edges);
+    println "Edges that we return: " + edges.dump()
+    edges
   }
 
   def variablesReordered() {
     model.currentStep = -1
     model.graphDrawn = false
-    // redraw(app.models.FunctionDialog.tableModel, view.pnlReorder.order.size())
   }
 
   def redrawReordered() {
@@ -112,7 +109,15 @@ class BddController {
       functionModel[index].f ? "1" : "0"
     }
 
-    redraw(view.pnlReorder.order.size(), closGetValueAt)
+    def edges = createBddEdges(closGetValueAt)
+
+    println "Edges to redraw: " 
+    println edges.dump()
+    println "Graph"
+    redrawGraph(edges);
+
+    model.functionDefined = true
+    model.currentStep = -1
   }
 
   def redrawGraph(graphData) {
@@ -391,11 +396,17 @@ class BddController {
   }
 
   def addStep = { vertices, edges, edgeObjects, graph, graphChange ->
-    def copiedVertices = new ArrayList(vertices)
-    def copiedEdgeObjects = new ArrayList(edgeObjects)
-    copiedEdgeObjects += edges.collect { [edge: it, source: graph.getSource(it), dest: graph.getDest(it)] }
-    println "Added step: ${model.steps.size()}"
-    model.steps << [vertices: copiedVertices, edges: copiedEdgeObjects, graphChange: graphChange]
+    if(addingEnabled) {
+      def copiedVertices = new ArrayList(vertices)
+      def copiedEdgeObjects = new ArrayList(edgeObjects)
+      copiedEdgeObjects += edges.collect { [edge: it, source: graph.getSource(it), dest: graph.getDest(it)] }
+      model.steps << [vertices: copiedVertices, edges: copiedEdgeObjects, graphChange: graphChange]
+      println "Added step: ${model.steps.size()}"
+    }
+  }
+
+  def addWholeGraphStep = { graph ->
+    addStep(graph.vertices, graph.edges, [], graph, GraphChange.empty())
   }
 
   def getSubtreeValues(vertex, graph) {
@@ -572,17 +583,18 @@ class BddController {
     //da.testSpectra()
     int nLevels = view.pnlReorder.order.size()
 
-    println "Current step: ${model.currentStep}"
-
+    println "`````````````````````Starting calculation of autocorrelation..."
     DyadicAutocorrelation.printGraph(model.graph)
 
     println "Add crosspoints"
     def graphWithCp = da.addCrosspoints(model.graph)
-    DyadicAutocorrelation.printGraph(graphWithCp)
-
     def edges = graphWithCp.edges
+    model.steps = []
+    addWholeGraphStep(graphWithCp)
+    DyadicAutocorrelation.printGraph(graphWithCp)
+    println "1***************************************************************"
     // Temp drawing to check crosspoints
-//    def copiedEdgeObjects = edges.collect { [edge: it, source: graph.getSource(it), dest: graph.getDest(it)] }
+//    def copiedEdgeObjects = edges.collect { [edge: it, source: graphWithCp.getSource(it), dest: graphWithCp.getDest(it)] }
 //    redrawGraph(copiedEdgeObjects)
 
     println "Calculate spectra"
@@ -591,24 +603,47 @@ class BddController {
     println "Square spectra"
     spectra = spectra.collect { it * it }
 
-    // create graph
-    println "Draw graph"
-    redraw(nLevels, { spectra[it] as String})
+    // Create graph. Draw it only to get helper graph (in model) required for the next step
+    edges = createBddEdges({ spectra[it] as String})
+    def helperGraph = createHelperGraph(edges)
+    addWholeGraphStep(helperGraph)
+    DyadicAutocorrelation.printGraph(helperGraph)
+    println "2***************************************************************"
+
 
     // reduce
-    reduceGraph(model.graph)
+    addingEnabled = false
+    def reducedGraph = createHelperGraph(reduceGraph(helperGraph))
+    addingEnabled = true
+    addWholeGraphStep(reducedGraph)
+    DyadicAutocorrelation.printGraph(reducedGraph)
+    println "3***************************************************************"
+
 
     // add crosspoints
-    graphWithCp = da.addCrosspoints(model.graph)
+    graphWithCp = da.addCrosspoints(reducedGraph)
+    addWholeGraphStep(graphWithCp)
+    DyadicAutocorrelation.printGraph(graphWithCp)
+    println "4***************************************************************"
 
     // calculate spectra
-    // 
     spectra = da.calculateSpectra(graphWithCp)
-
-
     def autoCorrelation = spectra.collect { 1/2**nLevels * it }
-    redraw(nLevels, { autoCorrelation[it] as String })
+    edges = createBddEdges({ autoCorrelation[it] as String})
+    helperGraph = createHelperGraph(edges)
+    addWholeGraphStep(helperGraph)
+    DyadicAutocorrelation.printGraph(helperGraph)
+    println "5***************************************************************"
     println autoCorrelation
 
+
+    //*****redraw(nLevels, { autoCorrelation[it] as String })
+
+    model.nSteps = model.steps.size()
+    model.currentStep = model.nSteps - 1
+
+    println model.nSteps
+    println model.currentStep
+    println "auto correlation done!"
   }
 }
