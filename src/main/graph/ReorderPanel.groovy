@@ -73,6 +73,13 @@ class ReorderPanel extends JPanel {
     }
   }
 
+  // x1, x2, x3, etc. (not reordered)
+  boolean isOrderNormal() {
+    order.every { el ->
+      "x${order.findIndexOf { it == el } + 1}" == el
+    }
+  }
+
   def refresh(dragedInd, dropedInd) {
 //    int dropedInd = order.indexOf(dropedVar)
 //    int dragedInd = order.indexOf(dragedVar)

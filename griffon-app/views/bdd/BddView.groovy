@@ -73,8 +73,8 @@ imageIcon('/griffon-icon-16x16.png').image
   borderLayout()
   panel(constraints: NORTH) {
     migLayout()
-    button(autocorrelationAction, constraints: "gapright 20px")
     button(openFunctionDialogAction, constraints: "gapright 20px")
+    button(autocorrelationAction, constraints: "gapright 20px", enabled: bind {model.functionDefined && model.graphDrawn && reorderPanel.isOrderNormal()})
     button(reduceGraphAction, enabled: bind {model.functionDefined && model.graphDrawn})
     button("Redraw", actionPerformed: { controller.redrawReordered()}, enabled: bind {model.functionDefined}, constraints: "gapright 20px")
     button (firstStepAction, id: 'btnFirst', enabled: bind {model.currentStep > 0} )
