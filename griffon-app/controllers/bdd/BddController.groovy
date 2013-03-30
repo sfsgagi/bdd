@@ -63,7 +63,7 @@ class BddController {
     return Integer.parseInt(finalStr as String, 2)
   }
 
-  HashSet createBddEdges(valueGetter) {
+  List createBddEdges(valueGetter) {
     def order = view.pnlReorder.order
     def nLevels = order.size()
     log.debug "ORDER KOJI KORISTIMO: $order"
@@ -87,7 +87,7 @@ class BddController {
 
     //log.debug vertices.dump()
 
-    def edges = [] as HashSet
+    def edges = []
     edges << [edge: new WeightedEdge(2), source: fVertex, dest: vertices[0] ]
     (0..2**nLevels - 2).each { i ->
       def startIndex = i * 2 + 1
