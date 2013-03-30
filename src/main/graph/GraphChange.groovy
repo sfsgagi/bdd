@@ -1,6 +1,10 @@
 package graph
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 class GraphChange {
+  static final Logger log = LoggerFactory.getLogger(GraphChange.class)
   def expelledEdges
   def expelledVertices
   def edgeRedirectedData

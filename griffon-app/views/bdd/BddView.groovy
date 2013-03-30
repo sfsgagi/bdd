@@ -6,40 +6,48 @@ import java.awt.Color
 import javax.swing.JSplitPane 
 
 actions {
-  action(id: 'openFunctionDialogAction',
-  name: 'Define function',
-  mnemonic: 'D',
-  accelerator: shortcut('D'),
-  closure: controller.openFunctionDialog)
-  action(id: 'reduceGraphAction',
-  name: 'Reduce Graph',
-  mnemonic: 'R',
-  accelerator: shortcut('R'),
-  closure: controller.onReduceGraph)
+  action(
+    id: 'openFunctionDialogAction',
+    name: 'Define function',
+    mnemonic: 'D',
+    accelerator: shortcut('D'),
+    closure: controller.openFunctionDialog);
+  action(
+    id: 'reduceGraphAction',
+    name: 'Reduce Graph',
+    mnemonic: 'R',
+    accelerator: shortcut('R'),
+    closure: controller.onReduceGraph);
   action(
     id: 'nextStepAction',
     name: '>',
     mnemonic: '+',
     accelerator: shortcut('+'),
-    closure: controller.nextStep)
+    closure: controller.nextStep);
   action(
     id: 'lastStepAction',
     name: '>>',
     mnemonic: 'E',
     accelerator: shortcut('E'),
-    closure: controller.lastStep)
+    closure: controller.lastStep);
   action(
     id: 'previousStepAction',
     name: '<',
     mnemonic: '-',
     accelerator: shortcut('-'),
-    closure: controller.previousStep)
+    closure: controller.previousStep);
   action(
     id: 'firstStepAction',
     name: '<<',
     mnemonic: 'H',
     accelerator: shortcut('H'),
-    closure: controller.firstStep)
+    closure: controller.firstStep);
+  action(
+    id: 'autocorrelationAction',
+    name: 'Autocorrelation',
+    mnemonic: 'A',
+    accelerator: shortcut('A'),
+    closure: controller.calculateAutocorrelation);
 }
 
 graphPanel = panel(id: "mainPanel", background: Color.white, layout: new BorderLayout())
@@ -52,7 +60,7 @@ reorderPanel = new ReorderPanel(4, controller)
 
 
 application(title: 'Binary Decision Diagrams - Step by step reduction',
-size: [1000,800],
+size: [1000,700],
 //pack: true,
 //location: [50,50],
 locationRelativeTo: null,
@@ -65,17 +73,14 @@ imageIcon('/griffon-icon-16x16.png').image
   borderLayout()
   panel(constraints: NORTH) {
     migLayout()
-// temp button
-    button("Test", actionPerformed: {controller.onTest()}, constraints: "gapright 20px")
-
+    button(autocorrelationAction, constraints: "gapright 20px")
     button(openFunctionDialogAction, constraints: "gapright 20px")
     button(reduceGraphAction, enabled: bind {model.functionDefined && model.graphDrawn})
-    button("Redraw", actionPerformed: { controller.redrawReordered()}, 
-    enabled: bind {model.functionDefined}, constraints: "gapright 20px")
+    button("Redraw", actionPerformed: { controller.redrawReordered()}, enabled: bind {model.functionDefined}, constraints: "gapright 20px")
     button (firstStepAction, id: 'btnFirst', enabled: bind {model.currentStep > 0} )
     button (previousStepAction, id: 'btnPrevious', enabled: bind {model.currentStep > 0} )
-    button (nextStepAction, id: 'btnNext', enabled: bind {model.currentStep != -1 && model.currentStep < model.nSteps - 1})
-    button (lastStepAction, id: 'btnLast', enabled: bind {model.currentStep != -1 && model.currentStep < model.nSteps - 1})
+    button (nextStepAction, id: 'btnNext', enabled: bind {model.currentStep != -1 && model.currentStep < model.nSteps - 2})
+    button (lastStepAction, id: 'btnLast', enabled: bind {model.currentStep != -1 && model.currentStep < model.nSteps - 2})
     label ('Step: ')
     label (text: bind {if(model.currentStep == -1) return "" else return model.currentStep + 1}, constraints: 'wrap')
     panel(id: "pnlReorderContainer", constraints: "spanx") {
@@ -85,5 +90,5 @@ imageIcon('/griffon-icon-16x16.png').image
     label (text: "[You can reorder variables (use drag & drop)]", visible: bind {model.functionDefined}, constraints: 'spanx, wrap')
   }
   splitPane(topComponent: graphPanel, bottomComponent: statusPanel,
-  dividerLocation: 750, dividerSize: 3, orientation: JSplitPane.VERTICAL_SPLIT, constraints: CENTER)
+  dividerLocation: 650, dividerSize: 3, orientation: JSplitPane.VERTICAL_SPLIT, constraints: CENTER)
 }

@@ -15,8 +15,12 @@ import edu.uci.ics.jung.visualization.GraphZoomScrollPane
 import edu.uci.ics.jung.visualization.Layer;
 import edu.uci.ics.jung.visualization.transform.MutableTransformer;
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
 
 class DyadicAutocorrelation {
+  static final Logger log = LoggerFactory.getLogger(DyadicAutocorrelation.class)
 
   def bruteForceAutoCorrelation(double [] x, double [] ac) {
     Arrays.fill(ac, 0);
@@ -34,9 +38,9 @@ class DyadicAutocorrelation {
     int[] ac = new int[n]
     f.eachWithIndex { fi, i ->
       (0..n - 1).each { tau ->
-        //println "$i: tau = $tau, i exor tau = ${i ^ tau} fi = $fi, fitau = ${f[i ^ tau]} "
+        //log.debug "$i: tau = $tau, i exor tau = ${i ^ tau} fi = $fi, fitau = ${f[i ^ tau]} "
         ac[tau] += fi * f[i ^ tau]
-        //println ac
+        //log.debug ac
       }
     }
     ac
@@ -67,11 +71,11 @@ class DyadicAutocorrelation {
     // Example from: Analysis of Decision Diagram based Methods for the Calculation of the Dyadic Autocorrelation, Radmanovic et al.
     def f = [0, 0, 1, 0, 1, 1, 1, 1]
 
-    //println dyadicAutoCorrelation(f)
-    println W
-    println dyadicAutoCorrelation(f)
-    println "____________________________"
-    println wkDyadicAutoCorrelation(f)
+    //log.debug dyadicAutoCorrelation(f)
+    log.debug "$W"
+    log.debug dyadicAutoCorrelation(f)
+    log.debug "____________________________"
+    log.debug wkDyadicAutoCorrelation(f)
   }
 
   def f = new MutableVertex('f', MutableVertex.ROOT)
@@ -114,18 +118,18 @@ class DyadicAutocorrelation {
   def createHelperGraph = { edges ->
     Graph<MutableVertex, String> graph = new DirectedOrderedSparseMultigraph<MutableVertex, String>();
     edges.each {
-      println "Adding edge: " + graph.addEdge(it.edge, it.source, it.dest)
+      log.debug "Adding edge: " + graph.addEdge(it.edge, it.source, it.dest)
     }
 
     return graph
   }
 
   def static printGraph(graph) {
-    println "Printing graph: "
+    log.debug "Printing graph: "
     graph.edges.each { e ->
-      println "" + graph.getSource(e).name + "---$e--->" + graph.getDest(e).name
+      log.debug "" + graph.getSource(e).name + "---$e--->" + graph.getDest(e).name
     }
-    println "----------------"
+    log.debug "----------------"
   }
 
   def addCrosspoints(graph) {
@@ -143,9 +147,9 @@ class DyadicAutocorrelation {
         graph.getOutEdges(v).each { edges << it }
       }
 
-      println "Parsing edges: "
+      log.debug "Parsing edges: "
       edges.each { e ->
-        println "" + graph.getSource(e).name + "---$e--->" + graph.getDest(e).name
+        log.debug "" + graph.getSource(e).name + "---$e--->" + graph.getDest(e).name
       }
       currentVertices = []
       for(def e : edges) {
@@ -164,11 +168,11 @@ class DyadicAutocorrelation {
           }
         }
       }
-      println "Current graph"
+      log.debug "Current graph"
       printGraph(graph);
-      println "#############"
+      log.debug "#############"
       currentLevel++
-      println "Current vertices: " + currentVertices
+      log.debug "Current vertices: " + currentVertices
     }
 
     graph
@@ -190,7 +194,7 @@ class DyadicAutocorrelation {
     def currentParents = getParents(graph, terminals)
     def mapVerticeToVector = [:]
     def spectra
-    println currentParents
+    log.debug "$currentParents"
     while(currentParents.size() > 0 && !currentParents.first().isRoot()) {
       currentParents.each { v ->
         def outEdges = graph.getOutEdges(v)
@@ -210,34 +214,34 @@ class DyadicAutocorrelation {
           def vec1 = mapVerticeToVector[dest1]
           def vec2 = mapVerticeToVector[dest2] as Queue
 
-          println vec1
-          println vec2
+          log.debug "$vec1"
+          log.debug "$vec2"
 
           def firstPart = vec1.collect { it + vec2.poll() }
           vec2 = mapVerticeToVector[dest2] as Queue
           def secondPart = vec1.collect { it - vec2.poll() }
           def finalVec = [firstPart, secondPart].flatten()
-          println "Final vec: " + finalVec
+          log.debug "Final vec: " + finalVec
           mapVerticeToVector[v] = finalVec
           spectra = finalVec
         } else {
           assert dest1.isTerminal() && dest2.isTerminal()
-          println "Destinations: "
-          println "$dest1, $dest2"
+          log.debug "Destinations: "
+          log.debug "$dest1, $dest2"
           int v1 = dest1.intValue()
           int v2 = dest2.intValue()
 
           mapVerticeToVector[v] = [ v1 + v2, v1 - v2 ]
-          println "Vector for $v: [$v1, $v2] "
-          println mapVerticeToVector[v]
+          log.debug "Vector for $v: [$v1, $v2] "
+          log.debug "$mapVerticeToVector[v]"
           spectra = mapVerticeToVector[v]
         }
       }
 
 
-      println "***********************"
+      log.debug "***********************"
       currentParents = getParents(graph, currentParents)
-      println currentParents
+      log.debug "$currentParents"
     }
 
     spectra
@@ -251,8 +255,8 @@ class DyadicAutocorrelation {
     def newGraph = addCrosspoints(testGraph)
     printGraph(newGraph)
 
-    println "Starting calculation of spectra of DD..."
-    println calculateSpectra(newGraph)
+    log.debug "Starting calculation of spectra of DD..."
+    log.debug calculateSpectra(newGraph)
   }
 }
 

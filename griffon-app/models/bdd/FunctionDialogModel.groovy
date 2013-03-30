@@ -14,7 +14,7 @@ class FunctionDialogModel {
   @Bindable Integer nVars = 1
 
   def createTableModel() {
-    println "Creating table model..."
+    log.debug "Creating table model..."
     def list = new SortedList(new BasicEventList(), {a, b -> a.x1 <=> b.x1} as Comparator)
     list.addAll(createRows())
 
@@ -48,7 +48,7 @@ class FunctionDialogModel {
   }
 
   def updateTableModel() {
-    println "Updating table model..."
+    log.debug "Updating table model..."
     tableSortingModel.clear()
     tableSortingModel.addAll(createRows())
 

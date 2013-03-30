@@ -28,7 +28,6 @@ dialog(owner: app.views.bdd, title: 'Enter function',
     scrollPane(constraints: "growx, spanx") {
       table(model: model.createTableModel()) {
         def params = [target: current, strategy: AbstractTableComparatorChooser.SINGLE_COLUMN, source: model.tableSortingModel]
-        println "table params: " + params.dump()
         TableComparatorChooser.install(params.target, params.source, params.strategy)
       }
     }
