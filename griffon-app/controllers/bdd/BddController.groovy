@@ -614,7 +614,7 @@ class BddController {
       log.debug "0***************************************************************"
 
       log.debug "Add crosspoints"
-      def graphWithCp = da.addCrosspoints(reducedGraph)
+      def graphWithCp = da.addCrosspoints(reducedGraph, nLevels)
       edges = graphWithCp.edges
       addWholeGraphStep(graphWithCp)
       DyadicAutocorrelation.printGraph(graphWithCp)
@@ -647,7 +647,7 @@ class BddController {
 
 
       // add crosspoints
-      graphWithCp = da.addCrosspoints(reducedGraph)
+      graphWithCp = da.addCrosspoints(reducedGraph, nLevels)
       addWholeGraphStep(graphWithCp)
       DyadicAutocorrelation.printGraph(graphWithCp)
       log.debug "4***************************************************************"

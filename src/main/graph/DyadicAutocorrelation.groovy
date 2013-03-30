@@ -132,9 +132,9 @@ class DyadicAutocorrelation {
     log.debug "----------------"
   }
 
-  def addCrosspoints(graph) {
+  def addCrosspoints(graph, nLevels) {
 
-    def order = (1..3).collect { "x" + it }
+    def order = (1..nLevels).collect { "x" + it }
     def currentLevel = 0
     def root = graph.vertices.find { v -> v.isRoot() }
 
@@ -252,7 +252,7 @@ class DyadicAutocorrelation {
     def testGraph = createHelperGraph(graphData2)
     printGraph(testGraph)
 
-    def newGraph = addCrosspoints(testGraph)
+    def newGraph = addCrosspoints(testGraph, 3)
     printGraph(newGraph)
 
     log.debug "Starting calculation of spectra of DD..."

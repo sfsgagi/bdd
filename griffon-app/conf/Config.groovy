@@ -14,8 +14,10 @@ log4j = {
 
     info   'griffon.util',
            'griffon.core',
-           'griffon.@application.toolkit@',
-           'griffon.app'
+           'griffon.@application.toolkit@'
+
+    all    'griffon.app'
+
 
 }
 
