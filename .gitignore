@@ -1,4 +1,5 @@
 .classpath
 *.swp
 staging/
+dist/
 
